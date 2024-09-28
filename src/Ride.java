@@ -14,6 +14,10 @@ public class Ride implements RideInterface {
     private int maxRider;
     private int numOfCycle;
     // Create a ReentrantLock instance
+
+    private int rideDuration;
+    // New attribute for ride duration in minutes
+
     private final Lock lock = new ReentrantLock();
 
     public Ride(){
@@ -27,7 +31,7 @@ public class Ride implements RideInterface {
 
 
 
-    public Ride(String rideName, int minAge, Employee operator, int maxRider){
+    public Ride(String rideName, int minAge, Employee operator, int maxRider, int rideDuration){
         this.setRideName(rideName);
         this.setMinAge(minAge);
         this.setOperator(operator);
@@ -35,6 +39,7 @@ public class Ride implements RideInterface {
         this.rideHistory = new LinkedList<>();
         this.maxRider = maxRider;
         this.numOfCycle = 0;
+        this.rideDuration = rideDuration; // Initialize the new attribute
 
     }
 
@@ -65,6 +70,21 @@ public class Ride implements RideInterface {
 
     public void setOperator(Employee operator) {
         this.operator = operator;
+    }
+
+    // New method to set ride duration
+    public void setRideDuration(int rideDuration) {
+        this.rideDuration = rideDuration;
+    }
+
+    // New method to get ride duration
+    public int getRideDuration() {
+        return this.rideDuration;
+    }
+
+    // New method to calculate total ride time
+    public int calculateTotalRideTime() {
+        return this.numOfCycle * this.rideDuration;
     }
 
     public void assignOperator(Employee operator) {
@@ -155,6 +175,32 @@ public class Ride implements RideInterface {
             lock.unlock();
         }
     }
+
+    @Override
+    public void runOneCycle() {
+        if (!visitorQueue.isEmpty()) {
+            int riders = Math.min(maxRider, visitorQueue.size());
+            lock.lock();
+            try {
+                for (int i = 0; i < riders; i++) {
+                    Visitor visitor = visitorQueue.poll();
+                    rideHistory.add(visitor);
+                    System.out.println(visitor.getName() + " is taking the ride.");
+                }
+                numOfCycle++;
+                System.out.println("Ride has been run " + numOfCycle + " times. Total ride time: " + calculateTotalRideTime() + " minutes.");
+            } finally {
+                lock.unlock();
+            }
+        } else if (operator == null) {
+            System.out.println("No operator assigned to run the ride.");
+        } else {
+            System.out.println("No visitors in the queue for the ride.");
+        }
+    }
+
+
+}
     public void addVisitorToRideHistory(Visitor visitor) {
         lock.lock();
         try {
